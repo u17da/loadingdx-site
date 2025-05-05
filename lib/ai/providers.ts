@@ -68,3 +68,9 @@ export const myProvider = isTestEnvironment
 export function isImagesEnabled(): boolean {
   return process.env.OPENAI_IMAGES_ENABLED === 'true';
 }
+// providers.ts の最後に追加
+export const imageModels = myProvider.options.imageModels;
+export function isImagesEnabled(): boolean {
+  return process.env.OPENAI_IMAGES_ENABLED === 'true';
+}
+
