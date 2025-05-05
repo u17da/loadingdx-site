@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { imageModels, isImagesEnabled } from '../../../lib/ai/providers';
+import { imageModels, isImagesEnabled } from '@/lib/ai/providers';
 
 export async function POST(request: Request) {
   // 画像生成機能が有効かチェック
