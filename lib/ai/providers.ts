@@ -1,8 +1,6 @@
 /**
  * lib/ai/providers.ts
- * ―――――――――――――――――――――――――――――――
- * OpenAI モデル定義と、画像生成モデル（DALL·E）＋有効判定関数を
- * export するだけのファイルです。
+ * OpenAI モデル定義 + 画像生成モデル（DALL·E）を export
  */
 
 import {
@@ -19,7 +17,7 @@ import {
   titleModel,
 } from './models.test';
 
-/* ─────────────── ① Chat / Text 系モデル ─────────────── */
+/* ─────────── ① Chat / Text 系モデル ─────────── */
 
 export const myProvider = isTestEnvironment
   ? customProvider({
@@ -41,54 +39,54 @@ export const myProvider = isTestEnvironment
           middleware: extractReasoningMiddleware({ tagName: 'think' }),
         }),
 
-        // タイトル・ドキュメント生成 → GPT-3.5 turbo
+        // タイトル／ドキュメント生成 → GPT-3.5 turbo
         'title-model': openai('gpt-3.5-turbo'),
         'artifact-model': openai('gpt-3.5-turbo'),
       },
 
-      /* ────────── ② 画像生成モデル ────────── */
+      /* ─────── ② 画像生成モデル ─────── */
       imageModels: {
         /**
-         * ユーザープロンプトを GPT-4o で磨いてから
-         * DALL·E-2 で画像を 1 枚生成するサンプル関数
+         * prompt-image:
+         * generate({ prompt }) → { url, prompt }
          */
-        async generateWithPromptEngineering(userPrompt: string) {
-          // 1) プロンプト整形
-          const refineRes = await openai.chat.completions.create({
-            model: 'gpt-4o-mini',
-            messages: [
-              {
-                role: 'system',
-                content:
-                  'あなたは画像生成のプロンプトエンジニアです。' +
-                  '以下のユーザー入力を DALL·E 向けの詳細な指示文に書き換えてください。',
-              },
-              { role: 'user', content: userPrompt },
-            ],
-          });
+        'prompt-image': {
+          async generate({ prompt: userPrompt }: { prompt: string }) {
+            // 1) GPT-4o でプロンプト整形
+            const refine = await openai.chat.completions.create({
+              model: 'gpt-4o-mini',
+              messages: [
+                {
+                  role: 'system',
+                  content:
+                    'あなたは画像生成のプロンプトエンジニアです。' +
+                    '以下のユーザー入力を DALL·E 向けに詳細化してください。',
+                },
+                { role: 'user', content: userPrompt },
+              ],
+            });
 
-          const refinedPrompt =
-            refineRes.choices[0].message.content?.trim() || userPrompt;
+            const refinedPrompt =
+              refine.choices[0].message.content?.trim() || userPrompt;
 
-          // 2) DALL·E-2 で画像生成
-          const imgRes = await openai.images.generate({
-            model: 'dall-e-2',
-            prompt: refinedPrompt,
-            n: 1,
-            size: '1024x1024',
-          });
+            // 2) DALL·E-2 で 1 枚生成
+            const img = await openai.images.generate({
+              model: 'dall-e-2',
+              prompt: refinedPrompt,
+              n: 1,
+              size: '1024x1024',
+            });
 
-          return { url: imgRes.data[0].url, prompt: refinedPrompt };
+            return { url: img.data[0].url, prompt: refinedPrompt };
+          },
         },
       },
-    });
+    }); // ←★ ここで customProvider のカッコを閉じる！
 
-/* ─────────────── ③ 外部から使う export ─────────────── */
+/* ─────────── ③ 外部へ export ─────────── */
 
-/** imageModels だけ個別に外へ出す */
 export const imageModels = (myProvider as any).options?.imageModels;
 
-/** 環境変数 OPENAI_IMAGES_ENABLED=true なら画像 API を有効にする */
 export function isImagesEnabled(): boolean {
   return process.env.OPENAI_IMAGES_ENABLED === 'true';
 }

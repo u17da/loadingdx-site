@@ -15,7 +15,8 @@ export async function POST(request: Request) {
 
   try {
     // GPT-4o でプロンプト整形 → DALL·E で画像生成
-    const { url, prompt: finalPrompt } = await imageModels.generateWithPromptEngineering(userPrompt);
+    const { url, prompt: finalPrompt } =
+  await imageModels['prompt-image'].generate({ prompt: userPrompt });
 
     // 生成結果を返却
     return NextResponse.json({ url, prompt: finalPrompt });
