@@ -95,7 +95,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const chat = await getChatById({ chatId: id });
+    const chat = await getChatById({ id });
 
     if (!chat) {
       const title = await generateTitleFromUserMessage({
@@ -114,7 +114,7 @@ export async function POST(request: Request) {
       }
     }
 
-    const previousMessages = await getMessagesByChatId({ chatId: id });
+    const previousMessages = await getMessagesByChatId({ id });
 
     const messages = appendClientMessage({
       // @ts-expect-error: todo add type conversion from DBMessage[] to UIMessage[]
@@ -318,7 +318,7 @@ export async function DELETE(request: Request) {
   }
 
   try {
-    const chat = await getChatById({ chatId: id });
+    const chat = await getChatById({ id });
 
     if (chat.userId !== session.user.id) {
       return new Response('Forbidden', { status: 403 });
