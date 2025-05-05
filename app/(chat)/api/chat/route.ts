@@ -95,7 +95,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const chat = await getChatById({ id });
+    const chat = await getChatById({ chatId: id });
 
     if (!chat) {
       const title = await generateTitleFromUserMessage({
@@ -279,7 +279,7 @@ export async function GET(request: Request) {
     return new Response('Forbidden', { status: 403 });
   }
 
-  const streamIds = await getStreamIdsByChatId({ chatId });
+  const streamIds = await getStreamIdsByChatId({ chatId: id });
 
   if (!streamIds.length) {
     return new Response('No streams found', { status: 404 });
