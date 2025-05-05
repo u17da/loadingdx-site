@@ -73,6 +73,8 @@ export async function POST(request: Request) {
     const { id, message, selectedChatModel, selectedVisibilityType } =
       requestBody;
 
+    (message as any).chatId = id;
+
     const session = await auth();
 
     if (!session?.user) {
@@ -279,7 +281,7 @@ export async function GET(request: Request) {
     return new Response('Forbidden', { status: 403 });
   }
 
-  const streamIds = await getStreamIdsByChatId({ chatId: id });
+  const streamIds = await getStreamIdsByChatId({ chatId });
 
   if (!streamIds.length) {
     return new Response('No streams found', { status: 404 });
