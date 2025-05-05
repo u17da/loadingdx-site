@@ -1,20 +1,17 @@
 /**
  * lib/ai/providers.ts
- * ──────────────────────────────────────────────
- * ❶ OpenAI  テキストモデル（GPT-4o など）
- * ❷ 画像生成モデル（DALL·E-2）
- * ❸ imageModels／isImagesEnabled を export
+ * OpenAI モデル定義 + 画像生成モデル（DALL·E）を export
  */
+import { generateText } from 'ai';
+import type { ImageModelV1 } from 'ai';        // ← 追加
 
 import {
   customProvider,
   extractReasoningMiddleware,
   wrapLanguageModel,
 } from 'ai';
-import { openai } from '@ai-sdk/openai';          // ← ai-sdk ラッパ
-import { generateText } from 'ai';                // ← テキスト生成ヘルパ
+import { openai } from '@ai-sdk/openai';
 import { isTestEnvironment } from '../constants';
-
 import {
   artifactModel,
   chatModel,
@@ -22,8 +19,7 @@ import {
   titleModel,
 } from './models.test';
 
-/* ─────────────── ❶ Chat / Text 系モデル ─────────────── */
-
+/* ────────── ① Chat / Text 系モデル ────────── */
 export const myProvider = isTestEnvironment
   ? customProvider({
       languageModels: {
@@ -35,29 +31,22 @@ export const myProvider = isTestEnvironment
     })
   : customProvider({
       languageModels: {
-        // メインチャット → GPT-4o mini
         'chat-model': openai('gpt-4o-mini'),
-
-        // “推論可視化” 用 (middleware で <think>…</think> を抽出)
         'chat-model-reasoning': wrapLanguageModel({
           model: openai('gpt-4o-mini'),
           middleware: extractReasoningMiddleware({ tagName: 'think' }),
         }),
-
-        // タイトル／ドキュメント生成 → GPT-3.5 turbo
         'title-model': openai('gpt-3.5-turbo'),
         'artifact-model': openai('gpt-3.5-turbo'),
       },
 
-      /* ─────────────── ❷ 画像生成モデル ─────────────── */
+      /* ────────── ② 画像生成モデル ────────── */
       imageModels: {
-        /**
-         * prompt-image
-         * generate({ prompt }) → { url, prompt }
-         */
         'prompt-image': {
-          async generate({ prompt: userPrompt }: { prompt: string }) {
-            /* 1) GPT-4o mini でプロンプト整形 */
+          async doGenerate(
+            { prompt: userPrompt }: { prompt: string },
+          ) {
+            // 1) GPT-4o mini でプロンプト整形
             const { text: refinedPrompt } = await generateText({
               model: openai('gpt-4o-mini'),
               system:
@@ -66,26 +55,22 @@ export const myProvider = isTestEnvironment
               prompt: userPrompt,
             });
 
-            /* 2) DALL·E-2 で 1 枚生成 */
-            const { url } = await openai
-              .image('dall-e-2')                // ← image モデルを取得
-              .generate({
+            // 2) DALL·E-2 で画像生成
+            const img = await openai
+              .image('dall-e-2')
+              .generateImage({
                 prompt: refinedPrompt,
                 size: '1024x1024',
-              });                               // 返り値 { url }
+              });
 
-            return { url, prompt: refinedPrompt };
+            return { url: img.url, prompt: refinedPrompt };
           },
-        } as any,                              // 型エラーを避けるため any
+        } satisfies ImageModelV1,   // ← 型チェック
       },
     });
 
-/* ─────────────── ❸ 外部へ export ─────────────── */
-
-/** 画像モデル群を外から使いたい場合はこれを import */
+/* ────────── ③ 外部へ export ────────── */
 export const imageModels = (myProvider as any).options?.imageModels;
-
-/** 環境変数 OPENAI_IMAGES_ENABLED=true なら画像 API を有効化 */
 export function isImagesEnabled(): boolean {
   return process.env.OPENAI_IMAGES_ENABLED === 'true';
 }
