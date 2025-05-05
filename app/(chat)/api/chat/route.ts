@@ -235,18 +235,27 @@ export async function POST(request: Request) {
       return new Response(
         await streamContext.resumableStream(streamId, () => stream),
       );
-    } else {
+     } else {
       return new Response(stream);
     }
   } catch (error) {
-    console.error(error);                        // ← Vercel ダッシュボードにも残す
-    return new Response(
-      (error as Error).stack ?? String(error),   // ← ブラウザでスタック全文を表示
-      { status: 500, headers: { 'Content-Type': 'text/plain' } },
-    );
-  }                                             // ★ catch を閉じる
-}                                               // ★ POST 関数を閉じる  ← 既にある場合は残す
+    console.error(error);
 
+    const isDev =
+      process.env.VERCEL_ENV !== 'production' &&
+      process.env.NODE_ENV !== 'production';
+
+    const body = isDev
+      ? (error as Error).stack ?? String(error)
+      : 'An unexpected error occurred.';
+
+    return new Response(body, {
+      status: 500,
+      headers: { 'Content-Type': 'text/plain' },
+    });
+  }   
+
+}
 export async function GET(request: Request) {
   const streamContext = getStreamContext();
 
