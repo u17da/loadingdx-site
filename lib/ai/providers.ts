@@ -79,7 +79,7 @@ export const myProvider = isTestEnvironment
 
             return { url: img.data[0].url, prompt: refinedPrompt };
           },
-        },
+        } as any,
       },
     }); // ←★ ここで customProvider のカッコを閉じる！
 
