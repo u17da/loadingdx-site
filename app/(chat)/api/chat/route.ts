@@ -238,12 +238,14 @@ export async function POST(request: Request) {
     } else {
       return new Response(stream);
     }
-  } catch (_) {
-    return new Response('An error occurred while processing your request!', {
-      status: 500,
-    });
-  }
-}
+  } catch (error) {
+    console.error(error);                        // ← Vercel ダッシュボードにも残す
+    return new Response(
+      (error as Error).stack ?? String(error),   // ← ブラウザでスタック全文を表示
+      { status: 500, headers: { 'Content-Type': 'text/plain' } },
+    );
+  }                                             // ★ catch を閉じる
+}                                               // ★ POST 関数を閉じる  ← 既にある場合は残す
 
 export async function GET(request: Request) {
   const streamContext = getStreamContext();
