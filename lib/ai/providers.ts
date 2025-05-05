@@ -3,7 +3,7 @@
  * OpenAI モデル定義 + 画像生成モデル（DALL·E）を export
  */
 import { generateText } from 'ai';
-import type { ImageModelV1 } from 'ai';        // ← 追加
+import type { ImageModel } from 'ai';        // ← 追加
 
 import {
   customProvider,
@@ -65,7 +65,7 @@ export const myProvider = isTestEnvironment
 
             return { url: img.url, prompt: refinedPrompt };
           },
-        } satisfies ImageModelV1,   // ← 型チェック
+        } satisfies ImageModel,   // ← 型チェック
       },
     });
 
