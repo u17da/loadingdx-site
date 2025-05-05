@@ -3,7 +3,7 @@ import {
   extractReasoningMiddleware,
   wrapLanguageModel,
 } from 'ai';
-import { xai } from '@ai-sdk/xai';
+import { openai } from '@ai-sdk/openai';
 import { isTestEnvironment } from '../constants';
 import {
   artifactModel,
@@ -21,17 +21,23 @@ export const myProvider = isTestEnvironment
         'artifact-model': artifactModel,
       },
     })
-  : customProvider({
+ : customProvider({
       languageModels: {
-        'chat-model': xai('grok-2-vision-1212'),
+        // メインチャット → GPT-4o
+        'chat-model': openai('gpt-4o-mini'),
+
+        // 推論可視化 → GPT-4o ＋ reasoning middleware
         'chat-model-reasoning': wrapLanguageModel({
-          model: xai('grok-3-mini-beta'),
+          model: openai('gpt-4o-mini'),
           middleware: extractReasoningMiddleware({ tagName: 'think' }),
         }),
-        'title-model': xai('grok-2-1212'),
-        'artifact-model': xai('grok-2-1212'),
+
+        // タイトル・ドキュメント生成 → GPT-3.5
+        'title-model': openai('gpt-3.5-turbo'),
+        'artifact-model': openai('gpt-3.5-turbo'),
       },
-      imageModels: {
-        'small-model': xai.image('grok-2-image'),
-      },
+      // 画像生成を使わなければ次の imageModels ブロックごと削除してOK
+      // imageModels: {
+      //   'small-model': openai.image('dall-e-3'),
+      // },
     });
