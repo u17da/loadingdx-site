@@ -5,7 +5,7 @@ import { signIn, signOut, useSession } from "next-auth/react";
 export function AuthButtons() {
   const { data: session } = useSession();
 
-  // すでにログインしている場合
+  // ========================= 既にログイン中 =========================
   if (session) {
     return (
       <button onClick={() => signOut()}>
@@ -14,15 +14,21 @@ export function AuthButtons() {
     );
   }
 
-  // 未ログインの場合
+  // ========================= 未ログイン時 =========================
   return (
-    <button
-      onClick={() => {
-        console.log(">>> click fired"); // 動作確認用ログ
-        signIn("github");
-      }}
-    >
-      Sign in with GitHub
-    </button>
+    <>
+      <button onClick={() => signIn("github")}>Sign in with GitHub</button>
+      <span style={{ margin: "0 0.5rem" }} />
+      <button
+   onClick={() =>
+     signIn("guest", {
+       redirect: false,
+       guest: "guest",      // ← ダミー値を渡す
+     })
+   }
+ >
+   Sign in as Guest
+ </button>
+    </>
   );
 }
