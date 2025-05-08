@@ -1,6 +1,5 @@
 // app/api/guest/route.ts  全文
 import { SignJWT } from 'jose';
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 // ───── ① HS512 でダミー JWT を発行

@@ -1,60 +1,34 @@
-import Form from 'next/form';
+'use client';
+import { useState } from 'react';
+import { signIn } from 'next-auth/react';
 
-import { Input } from './ui/input';
-import { Label } from './ui/label';
+export default function AuthForm() {
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
 
-export function AuthForm({
-  action,
-  children,
-  defaultEmail = '',
-}: {
-  action: NonNullable<
-    string | ((formData: FormData) => void | Promise<void>) | undefined
-  >;
-  children: React.ReactNode;
-  defaultEmail?: string;
-}) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setLoading(true);
+    await signIn('email', { email, callbackUrl: '/' });
+  }
+
   return (
-    <Form action={action} className="flex flex-col gap-4 px-4 sm:px-16">
-      <div className="flex flex-col gap-2">
-        <Label
-          htmlFor="email"
-          className="text-zinc-600 font-normal dark:text-zinc-400"
-        >
-          Email Address
-        </Label>
-
-        <Input
-          id="email"
-          name="email"
-          className="bg-muted text-md md:text-sm"
-          type="email"
-          placeholder="user@acme.com"
-          autoComplete="email"
-          required
-          autoFocus
-          defaultValue={defaultEmail}
-        />
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <Label
-          htmlFor="password"
-          className="text-zinc-600 font-normal dark:text-zinc-400"
-        >
-          Password
-        </Label>
-
-        <Input
-          id="password"
-          name="password"
-          className="bg-muted text-md md:text-sm"
-          type="password"
-          required
-        />
-      </div>
-
-      {children}
-    </Form>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <input
+        type="email"
+        placeholder="you@example.com"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+        className="border rounded p-2"
+      />
+      <button
+        type="submit"
+        disabled={loading}
+        className="bg-black text-white py-2 rounded disabled:opacity-50"
+      >
+        {loading ? 'Sending…' : 'Sign in'}
+      </button>
+    </form>
   );
 }

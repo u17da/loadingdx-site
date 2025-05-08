@@ -1,15 +1,29 @@
-import NextAuth from "next-auth";
-import GitHub from "next-auth/providers/github";
+import NextAuth from 'next-auth';
+import GitHub from 'next-auth/providers/github';
+import Credentials from 'next-auth/providers/credentials';
+import { randomUUID } from 'node:crypto';
 
-const handler = NextAuth({
+export const authOptions = {
   providers: [
+    // --- GitHub OAuth ---
     GitHub({
-      clientId: process.env.GITHUB_ID!,
-      clientSecret: process.env.GITHUB_SECRET!,
+      clientId: process.env.GITHUB_ID ?? '',
+      clientSecret: process.env.GITHUB_SECRET ?? '',
+    }),
+
+    // --- Guest login ---
+    Credentials({
+      id: 'guest',
+      name: 'Guest',
+      credentials: { guest: { label: 'guest', type: 'hidden' } },
+      async authorize() {
+        return { id: randomUUID(), name: 'ゲストさん', type: 'guest' };
+      },
     }),
   ],
-  // ← データベース接続前の最小構成
-  session: { strategy: "jwt" },
-});
+  session: { strategy: 'jwt' },
+  debug: process.env.NODE_ENV !== 'production',
+};
 
+const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };
